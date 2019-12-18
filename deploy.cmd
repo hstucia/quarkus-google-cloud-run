@@ -1,9 +1,11 @@
 @ECHO off
 @SETLOCAL
 
-SET CREATE_PROJECT=true
-SET PROJECT_ID=gcp-quarkus
-SET SERVICE_NAME=quarkus-google-cloud-run
+set CREATE_PROJECT=true
+set PROJECT_PREFIX=tdlabs
+set REGION=europe-west1
+set PROJECT_ID=%PROJECT_PREFIX%-gcp-quarkus-demo
+set SERVICE_NAME=%PROJECT_PREFIX%-quarkus-demo-google-cloud-run
 
 WHERE /Q gcloud
 IF %ERRORLEVEL% NEQ 0 (
@@ -36,7 +38,7 @@ CALL gcloud builds submit --no-user-output-enabled --config cloudbuild.yaml .
 if %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
 ECHO You can access your application at:
-CALL gcloud.cmd beta run services describe %SERVICE_NAME% --format="get(domain)"
+CALL gcloud beta run services describe %SERVICE_NAME% --format="get(domain)"
 EXIT /B 0
 
 :deployProject
@@ -46,7 +48,7 @@ CALL gcloud builds submit --no-user-output-enabled --config cloudbuild.yaml .
 if %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
 ECHO You can access your application at:
-CALL gcloud.cmd beta run services describe %SERVICE_NAME% --format="get(domain)"
+CALL gcloud run services describe %SERVICE_NAME% --format="get(domain)"
 EXIT /B 0
 
 :deploy

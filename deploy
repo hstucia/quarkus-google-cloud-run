@@ -1,14 +1,16 @@
 #!/bin/bash
 
 CREATE_PROJECT=true
-PROJECT_ID=gcp-quarkus
-SERVICE_NAME=quarkus-google-cloud-run
+PROJECT_PREFIX=tdlabs
+REGION=europe-west1
+PROJECT_ID=$PROJECT_PREFIX-gcp-quarkus-demo
+SERVICE_NAME=$PROJECT_PREFIX-quarkus-demo-google-cloud-run
 
 createProject() {
     echo "Setting up $PROJECT_ID"
     gcloud projects create --no-user-output-enabled "$PROJECT_ID"
     gcloud config set project --no-user-output-enabled "$PROJECT_ID"
-    gcloud config set run/region --no-user-output-enabled us-central1
+    gcloud config set run/region --no-user-output-enabled "$REGION"
     gcloud beta billing accounts list --format="table['box'](displayName,name)"
 
     # It reads the account ID
@@ -28,7 +30,7 @@ createProject() {
     gcloud builds submit --no-user-output-enabled --config cloudbuild.yaml .
 
     echo "You can access your application at:"
-    gcloud.cmd beta run services describe "$SERVICE_NAME" --format="get(domain)"
+    gcloud run services describe "$SERVICE_NAME" --region="$REGION" --format="get(domain)"
 }
 
 deploy() {
@@ -37,10 +39,13 @@ deploy() {
     else
         echo "Building $SERVICE_NAME"
         gcloud config set project --no-user-output-enabled "$PROJECT_ID"
+        gcloud config set run/platform managed
+        gcloud config set run/region "$REGION"
+
         gcloud builds submit --no-user-output-enabled --config cloudbuild.yaml .
 
         echo "You can access your application at:"
-        gcloud.cmd beta run services describe "$SERVICE_NAME" --format="get(domain)"
+        gcloud run services describe "$SERVICE_NAME" --format="get(domain)"
     fi
 }
 
