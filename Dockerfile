@@ -1,12 +1,13 @@
 # Step 1: build the native image
-FROM oracle/graalvm-ce:1.0.0-rc15 as graalvm
-COPY . /home/app
-WORKDIR /home/app
+FROM oracle/graalvm-ce:19.2.1 as graalvm
+
+# Install Graal Native Image plugin
+RUN gu install --no-progress native-image
 
 # Download and install Maven
-ARG MAVEN_VERSION=3.6.1
+ARG MAVEN_VERSION=3.6.3
 ARG USER_HOME_DIR="/root"
-ARG SHA=b4880fb7a3d81edd190a029440cdf17f308621af68475a4fe976296e71ff4a4b546dd6d8a58aaafba334d309cc11e638c52808a4b0e818fc0fd544226d952544
+ARG SHA=c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0
 ARG BASE_URL=https://apache.osuosl.org/maven/maven-3/${MAVEN_VERSION}/binaries
 
 RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
@@ -18,12 +19,20 @@ RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
 
 ENV MAVEN_HOME /usr/share/maven
 ENV GRAALVM_HOME $JAVA_HOME
-RUN $MAVEN_HOME/bin/mvn clean package -Pnative
+ENV MAVEN_OPTS "-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
+
+COPY . /home/app
+WORKDIR /home/app
+
+RUN $MAVEN_HOME/bin/mvn -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn package -Pnative
 
 # Step 2: build the running container
 FROM registry.fedoraproject.org/fedora-minimal
-WORKDIR /work/
-COPY --from=graalvm /home/app/target/*-runner /work/application
-RUN chmod 775 /work
+WORKDIR /svc/
+COPY --from=graalvm /home/app/target/*-runner /svc/app
+RUN chmod 775 /svc
+
+USER 1000
+
 EXPOSE 8080
-ENTRYPOINT ["./application", "-Dquarkus.http.host=0.0.0.0"]
+ENTRYPOINT ["./app", "-Dquarkus.http.host=0.0.0.0"]
