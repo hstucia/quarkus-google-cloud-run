@@ -1,8 +1,8 @@
 @ECHO off
 @SETLOCAL
 
-set CREATE_PROJECT=true
-set PROJECT_PREFIX=tdlabs
+set CREATE_PROJECT=false
+set PROJECT_PREFIX=hstucia
 set REGION=europe-west1
 set PROJECT_ID=%PROJECT_PREFIX%-gcp-quarkus-demo
 set SERVICE_NAME=%PROJECT_PREFIX%-quarkus-demo-google-cloud-run
@@ -45,6 +45,8 @@ EXIT /B 0
 :deployProject
 ECHO Building %SERVICE_NAME%
 CALL gcloud config set project --no-user-output-enabled %PROJECT_ID%
+CALL gcloud config set run/platform managed
+CALL gcloud config set run/region %REGION%
 CALL gcloud builds submit --no-user-output-enabled --config cloudbuild.yaml .
 if %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
