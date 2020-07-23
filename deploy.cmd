@@ -26,6 +26,7 @@ SET /P ACCOUNT_ID="Enter the billing account ID you want to use: "
 
 ECHO Enabling GCP services
 CALL gcloud beta billing projects link --no-user-output-enabled %PROJECT_ID% --billing-account=%ACCOUNT_ID%
+if %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 CALL gcloud services enable --no-user-output-enabled cloudbuild.googleapis.com
 CALL gcloud services enable --no-user-output-enabled run.googleapis.com
 
